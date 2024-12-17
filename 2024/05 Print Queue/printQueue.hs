@@ -3,7 +3,7 @@ import Data.List.Split
 import Data.Map (Map, fromList, insert, lookup)
 
 {-- First part
---}
+--
 main = do
   contents <- getContents
   let allLines = lines contents
@@ -40,6 +40,39 @@ updateIsValid rules (_:[])   = True
 updateIsValid rules (a:b:us) = case maybeYs of
                                  Nothing -> updateIsValid rules (b:us)
                                  Just ys -> if elem a ys  -- if there is a rule «"b" before "a"»
-                                           then False
-                                           else updateIsValid rules (b:us)
+                                            then False
+                                            else updateIsValid rules (b:us)
   where maybeYs = lookup b rules
+
+{-- Second part
+--}
+main = do
+  contents <- getContents
+  let allLines = lines contents
+      (rules, updates) = extractRulesAndUpdates allLines
+      invalidUpdates = filter (not . updateIsValid rules) updates
+      fixedUpdates = map (fixUpdates rules) invalidUpdates
+      midNumbers = map (\l -> read (l !! ((length l-1) `div` 2)) :: Int) fixedUpdates
+      sumOfMidNumbers = sum midNumbers
+  -- print $ rules
+  -- print $ updates
+  -- print $ invalidUpdates
+  -- print $ fixedUpdates
+  -- print $ midNumbers
+  print $ sumOfMidNumbers
+--}
+
+fixUpdates :: (Map String [String]) -> [String] -> [String]
+fixUpdates rules [] = []
+fixUpdates rules (a:[]) = (a:[])
+fixUpdates rules (a:b:us) =
+  let fixedTail = fixUpdates rules (b:us)
+  in sink a fixedTail
+  where sink x [] = x:[]
+        sink x (y:ys) = if x `isInRulesOf` y
+                        then y : sink x ys
+                        else x : y : ys
+        isInRulesOf x y = case maybeYs of
+                            Nothing -> False
+                            Just ys -> elem x ys  -- whether x is in the rules of y or not
+          where maybeYs = lookup y rules
