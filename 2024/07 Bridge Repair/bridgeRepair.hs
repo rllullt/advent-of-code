@@ -1,17 +1,40 @@
-main = do
-  print "Hola"
+import Data.List.Split
+import Data.Maybe (isJust, fromMaybe)
 
-resolver_eq :: Int -> [Int] -> Maybe [String]
-resolver_eq n (x:[]) = if n == x then Just [] else Nothing
-resolver_eq n (x:xs) =
-  let res = let res_sum = resolver_eq (n - last xs) (take (length xs) (x:xs))
+{-- First part
+--}
+main = do
+  contents <- getContents
+  let eqs = map getEq $ lines contents
+      solvEqs = map (\eq -> resolverEq (fst eq) (snd eq)) eqs
+      justSolvEqs = filter isJust solvEqs
+      nums = map (fst . fromMaybe (0, [])) justSolvEqs
+      theSum = sum nums
+  -- print "Hola"
+  -- print eqs
+  -- print solvEqs
+  -- print justSolvEqs
+  -- print nums
+  print theSum
+--}
+
+resolverEq :: Int -> [Int] -> Maybe (Int, [String])
+resolverEq n (x:[]) = if n == x then Just (0, []) else Nothing
+resolverEq n (x:xs) =
+  let res = let res_sum = resolverEq (n - last xs) (take (length xs) (x:xs))
             in case res_sum of
-                 Just l -> Just (l ++ ["+"])
+                 Just (i, l) -> Just (n, l ++ ["+"])
                  Nothing -> let divisible = n `mod` last xs == 0
                                 res_mult = if divisible
-                                           then resolver_eq (n / last xs) (take (length xs) (x:xs))
+                                           then resolverEq (n `div` last xs) (take (length xs) (x:xs))
                                            else Nothing
                             in case res_mult of
-                                 Just l -> Just (l ++ ["*"])
+                                 Just (i, l) -> Just (n, l ++ ["*"])
                                  Nothing -> Nothing
   in res
+
+getEq :: String -> (Int, [Int])
+getEq s = (val, nums)
+  where splitted = splitOn ":" s
+        val = read . head $ splitted :: Int
+        nums = map (\x -> read x :: Int) . words $ last splitted
