@@ -44,7 +44,7 @@ getEq s = (val, nums)
 main = do
   contents <- getContents
   let eqs = map getEq $ lines contents
-      solvEqs = map (\eq -> resolverEq2 (fst eq) (snd eq)) eqs
+      solvEqs = map (\eq -> resolverEq3 (fst eq) (snd eq)) eqs
       justSolvEqs = filter isJust solvEqs
       nums = map (fst . fromMaybe (0, [])) justSolvEqs
       theSum = sum nums
@@ -55,7 +55,7 @@ main = do
   print theSum
 
 resolverEq2 :: Int -> [Int] -> Maybe (Int, [String])
-resolverEq2 n (x:[]) = if n == x then Just (0, []) else Nothing
+resolverEq2 n (x:[]) = if n == x then Just (n, []) else Nothing
 resolverEq2 n (x:y:[]) = if x + y == n
                          then Just (n, ["+"])
                          else if x * y == n
@@ -84,6 +84,21 @@ resolverEq2 n (x:xs) =
                                                else Nothing
   in res
 
+resolverEq3 :: Int -> [Int] -> Maybe (Int, [String])
+resolverEq3 n (x:[]) = if n == x then Just (n, [""]) else Nothing
+resolverEq3 n (x:y:xs) =
+  let res = let res_sum = resolverEq3 n (x+y:xs)
+            in case res_sum of
+                 Just (i, l) -> Just (n, "+" : l)
+                 Nothing -> let res_mult = resolverEq3 n (x*y:xs)
+                            in case res_mult of
+                                 Just (i, l) -> Just (n, "*" : l)
+                                 Nothing -> let res_concat = resolverEq3 n (concatInts x y : xs)
+                                            in case res_concat of
+                                                 Just (i, l) -> Just (n, "||" : l)
+                                                 Nothing -> Nothing
+  in res
+
 penult :: [a] -> a
 penult xs = xs !! (length xs - 2)
 
@@ -91,3 +106,4 @@ antepenult xs = xs !! (length xs - 3)
 
 concatInts :: Int -> Int -> Int
 concatInts a b = read $ show a ++ show b :: Int
+ 
