@@ -1,5 +1,7 @@
 import Data.List.Split
 
+{-- First part
+--}
 main = do
   contents <- getContents
   let disk = head $ map getDisk $ lines contents  -- the input is only one disk memory
@@ -8,6 +10,7 @@ main = do
   -- print $ disk
   print $ unwords defragmentedDisk
   print $ checksum
+--}
 
 data DiskType = File | Space
 
@@ -41,3 +44,22 @@ defragmentDisk (x:xs) = x : defragmentDisk xs
 
 calculateChecksum :: [String] -> Int
 calculateChecksum disk = foldl (\a (i, x) -> a + i * (read x :: Int)) 0 (zip [0..] disk)
+
+
+{-- Second part
+--}
+main = do
+  contents <- getContents
+  let disk = head $ map getDisk $ lines contents
+  print $ disk
+
+defragmentDiskEfficient i j disk = if disk !! i /= "."
+                                   then let (iniF, endF) =
+                                            (iniE, endE) =
+                                            fileWidth = endF - iniF + 1
+                                            emptyWidth = endE - iniE + 1
+                                        in if emptyWidth >= fileWidth
+                                           then let newDisk = writeFile iniE endE (disk !! i) disk
+                                                in defragmentDiskEfficient (iniF-1) (endE+1) newDisk
+                                           else defragmentDiskEfficient i (endE+1) disk
+                                   else defragmentDiskEfficient (i-1) j disk
