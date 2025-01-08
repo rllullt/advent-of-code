@@ -1,7 +1,7 @@
 import Data.List.Split
 
 {-- First part
---}
+--
 main = do
   contents <- getContents
   let disk = head $ map getDisk $ lines contents  -- the input is only one disk memory
@@ -51,15 +51,40 @@ calculateChecksum disk = foldl (\a (i, x) -> a + i * (read x :: Int)) 0 (zip [0.
 main = do
   contents <- getContents
   let disk = head $ map getDisk $ lines contents
+      defragmentedDisk = defragmentDiskEfficient (length disk - 1) 0 disk
+      t = tail $ splitOn "" "00...111...2...333.44....."
   print $ disk
+  print $ defragmentedDisk
 
-defragmentDiskEfficient i j disk = if disk !! i /= "."
-                                   then let (iniF, endF) =
-                                            (iniE, endE) =
-                                            fileWidth = endF - iniF + 1
-                                            emptyWidth = endE - iniE + 1
-                                        in if emptyWidth >= fileWidth
-                                           then let newDisk = writeFile iniE endE (disk !! i) disk
-                                                in defragmentDiskEfficient (iniF-1) (endE+1) newDisk
-                                           else defragmentDiskEfficient i (endE+1) disk
-                                   else defragmentDiskEfficient (i-1) j disk
+defragmentDiskEfficient :: Int -> Int -> [String] -> [String]
+defragmentDiskEfficient i j disk = if i <= 0
+                                   then disk
+                                   else  if disk !! i /= "."
+                                         then let (iniF, endF) = getIniIndex (i-1) i disk
+                                                  (iniE, endE) = getEndIndex j (j+1) disk
+                                                  fileWidth = endF - iniF + 1
+                                                  emptyWidth = endE - iniE + 1
+                                              in if emptyWidth >= fileWidth && endE < iniF
+                                                 then let newDisk = writeDisk iniE endE iniF endF (disk !! i) disk
+                                                      in defragmentDiskEfficient (length disk - 1) 0 newDisk
+                                                 else defragmentDiskEfficient (i-fileWidth) 0 disk
+                                         else defragmentDiskEfficient (i-1) 0 disk
+
+getIniIndex 0 end disk = (0, end)
+getIniIndex ini end disk = if disk !! ini == disk !! end
+                           then getIniIndex (ini-1) end disk
+                           else (ini+1, end)
+
+getEndIndex ini end disk = if disk !! ini /= "."
+                           then getEndIndex (ini+1) (end+1) disk
+                           else if end < length disk && disk !! ini == disk !! end
+                                then getEndIndex ini (end+1) disk
+                                else (ini, end-1)
+
+writeDisk iniE endE iniF endF a disk = map (\i -> if iniE <= i && i <= endE && i - fileWidth < iniE
+                                                  then a
+                                                  else if iniF <= i && i <= endF
+                                                       then "."
+                                                       else disk !! i)
+                                           [0..length disk-1]
+  where fileWidth = endF - iniF + 1
