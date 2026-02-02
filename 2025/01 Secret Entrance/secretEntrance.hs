@@ -30,11 +30,9 @@ rotate2 (dialPos, count) (Instruction L amount) = (position, passesOver0 + count
     position = (dialPos - amount) `mod` 100
     passesOver0 = if dialPos == 0
                   then amount `div` 100
-                  else if amount == dialPos
-                       then 1
-                       else if amount > dialPos
-                            then 1 + (abs (dialPos - amount) `div` 100)
-                            else 0
+                  else if amount >= dialPos
+                       then 1 + (abs (dialPos - amount) `div` 100)
+                       else 0
 rotate2 (dialPos, count) (Instruction R amount) = (position, passesOver0 + count)
   where
     position = (dialPos + amount) `mod` 100
